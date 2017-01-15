@@ -23,19 +23,19 @@
               <ul class="nav navbar-nav navbar-right">
                   {% if current_user.is_authenticated %}
                     {% if current_user.is_admin %}
-                      <li><a href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
-                      <li><a href="{{ url_for('admin.list_departments') }}">Departments</a></li>
-                      <li><a href="{{ url_for('admin.list_roles') }}">Roles</a></li>
-                      <li><a href="{{ url_for('admin.list_employees') }}">Employees</a></li>
+                      <li id="dashboard_link_admin"><a href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
+                      <li id="departments_link"><a href="{{ url_for('admin.list_departments') }}">Departments</a></li>
+                      <li id="roles_link"><a href="{{ url_for('admin.list_roles') }}">Roles</a></li>
+                      <li id="employees_link"><a href="{{ url_for('admin.list_employees') }}">Employees</a></li>
                     {% else %}
-                      <li><a href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
+                      <li id="dashboard_link_employee"><a href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
                     {% endif %}
-                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                    <li><a><i class="fa fa-user"></i>  Hi, {{ current_user.username }}!</a></li>
+                    <li id="logout_link"><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    <li id="username_greeting"><a><i class="fa fa-user"></i>  Hi, {{ current_user.username }}!</a></li>
                   {% else %}
-                    <li><a href="{{ url_for('home.homepage') }}">Home</a></li>
-                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li id="home_link"><a href="{{ url_for('home.homepage') }}">Home</a></li>
+                    <li id="register_link"><a href="{{ url_for('auth.register') }}">Register</a></li>
+                    <li id="login_link"><a href="{{ url_for('auth.login') }}">Login</a></li>
                   {% endif %}
               </ul>
           </div>
