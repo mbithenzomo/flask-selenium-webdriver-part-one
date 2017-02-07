@@ -83,30 +83,30 @@ class TestBase(LiveServerTestCase):
         self.driver = webdriver.Chrome()
         self.driver.get(self.get_server_url())
 
+        db.session.commit()
+        db.drop_all()
         db.create_all()
 
         # create test admin user
-        admin = Employee(username=test_admin_username,
-                         email=test_admin_email,
-                         password=test_admin_password,
-                         is_admin=True)
+        self.admin = Employee(username=test_admin_username,
+                              email=test_admin_email,
+                              password=test_admin_password,
+                              is_admin=True)
 
         # create test employee user
-        employee = Employee(username=test_employee1_username,
-                            first_name=test_employee1_first_name,
-                            last_name=test_employee1_last_name,
-                            email=test_employee1_email,
-                            password=test_employee1_password)
+        self.employee = Employee(username=test_employee1_username,
+                                 first_name=test_employee1_first_name,
+                                 last_name=test_employee1_last_name,
+                                 email=test_employee1_email,
+                                 password=test_employee1_password)
 
         # save users to database
-        db.session.add(admin)
-        db.session.add(employee)
+        db.session.add(self.admin)
+        db.session.add(self.employee)
         db.session.commit()
 
     def tearDown(self):
         self.driver.quit()
-        db.session.remove()
-        db.drop_all()
 
     def test_server_is_up_and_running(self):
         response = urllib2.urlopen(self.get_server_url())
@@ -134,6 +134,7 @@ class TestAuth(TestBase):
         self.driver.find_element_by_id("confirm_password").send_keys(
             test_employee2_password)
         self.driver.find_element_by_id("submit").click()
+        time.sleep(1)
 
         # Assert success message is shown
         success_message = self.driver.find_element_by_class_name("alert").text
@@ -175,7 +176,7 @@ class TestAuth(TestBase):
         time.sleep(1)
 
         # Fill in registration form
-        self.driver.find_element_by_id("email").send_keys("invalid_email")
+        self.driver.find_element_by_id("email").send_keys(test_employee2_email)
         self.driver.find_element_by_id("username").send_keys(
             test_employee2_username)
         self.driver.find_element_by_id("first_name").send_keys(
