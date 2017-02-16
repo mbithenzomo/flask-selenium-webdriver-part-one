@@ -51,6 +51,7 @@ def add_department():
             flash('You have successfully added a new department.')
         except:
             # in case department name already exists
+            db.session.rollback()
             flash('Error: department name already exists.')
 
         # redirect to departments page
