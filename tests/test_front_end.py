@@ -5,6 +5,7 @@ import time
 from flask import url_for
 from flask_testing import LiveServerTestCase
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 
 from app import create_app, db
 from app.models import Employee, Department, Role
@@ -426,6 +427,207 @@ class TestDepartments(CreateObjects, TestBase):
 
         # Assert that there are no departments in the database
         self.assertEqual(Department.query.count(), 0)
+
+
+class TestRoles(CreateObjects, TestBase):
+
+    def test_add_role(self):
+        """
+        Test that an admin user can add a role
+        """
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click roles menu link
+        self.driver.find_element_by_id("roles_link").click()
+        time.sleep(1)
+
+        # Click on add role button
+        self.driver.find_element_by_class_name("btn").click()
+        time.sleep(1)
+
+        # Fill in add role form
+        self.driver.find_element_by_id("name").send_keys(test_role2_name)
+        self.driver.find_element_by_id("description").send_keys(
+            test_role2_description)
+        self.driver.find_element_by_id("submit").click()
+        time.sleep(2)
+
+        # Assert success message is shown
+        success_message = self.driver.find_element_by_class_name("alert").text
+        assert "You have successfully added a new role" in success_message
+
+        # Assert that there are now 2 roles in the database
+        self.assertEqual(Role.query.count(), 2)
+
+    def test_add_existing_role(self):
+        """
+        Test that an admin user cannot add a role with a name
+        that already exists
+        """
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click roles menu link
+        self.driver.find_element_by_id("roles_link").click()
+        time.sleep(1)
+
+        # Click on add role button
+        self.driver.find_element_by_class_name("btn").click()
+        time.sleep(1)
+
+        # Fill in add role form
+        self.driver.find_element_by_id("name").send_keys(test_role1_name)
+        self.driver.find_element_by_id("description").send_keys(
+            test_role1_description)
+        self.driver.find_element_by_id("submit").click()
+        time.sleep(2)
+
+        # Assert error message is shown
+        error_message = self.driver.find_element_by_class_name("alert").text
+        assert "Error: role name already exists" in error_message
+
+        # Assert that there is still only 1 role in the database
+        self.assertEqual(Role.query.count(), 1)
+
+    def test_edit_role(self):
+        """
+        Test that an admin user can edit a role
+        """
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click roles menu link
+        self.driver.find_element_by_id("roles_link").click()
+        time.sleep(1)
+
+        # Click on edit role link
+        self.driver.find_element_by_class_name("fa-pencil").click()
+        time.sleep(1)
+
+        # Fill in add role form
+        self.driver.find_element_by_id("name").clear()
+        self.driver.find_element_by_id("name").send_keys("Edited name")
+        self.driver.find_element_by_id("description").clear()
+        self.driver.find_element_by_id("description").send_keys(
+            "Edited description")
+        self.driver.find_element_by_id("submit").click()
+        time.sleep(2)
+
+        # Assert success message is shown
+        success_message = self.driver.find_element_by_class_name("alert").text
+        assert "You have successfully edited the role" in success_message
+
+        # Assert that role name and description has changed
+        role = Role.query.get(1)
+        self.assertEqual(role.name, "Edited name")
+        self.assertEqual(role.description, "Edited description")
+
+    def test_delete_role(self):
+        """
+        Test that an admin user can delete a role
+        """
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click roles menu link
+        self.driver.find_element_by_id("roles_link").click()
+        time.sleep(1)
+
+        # Click on edit role link
+        self.driver.find_element_by_class_name("fa-trash").click()
+        time.sleep(1)
+
+        # Assert success message is shown
+        success_message = self.driver.find_element_by_class_name("alert").text
+        assert "You have successfully deleted the role" in success_message
+
+        # Assert that there are no roles in the database
+        self.assertEqual(Role.query.count(), 0)
+
+
+class TestEmployees(CreateObjects, TestBase):
+
+    def test_assign(self):
+        """
+        Test that an admin user can assign a role and a department
+        to an employee
+        """
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click employees menu link
+        self.driver.find_element_by_id("employees_link").click()
+        time.sleep(1)
+
+        # Click on assign link
+        self.driver.find_element_by_class_name("fa-user-plus").click()
+        time.sleep(1)
+
+        # Department and role already loaded in form
+        self.driver.find_element_by_id("submit").click()
+        time.sleep(2)
+
+        # Assert success message is shown
+        success_message = self.driver.find_element_by_class_name("alert").text
+        assert "You have successfully assigned a department and role" in success_message
+
+        # Assert that department and role has been assigned to employee
+        employee = Employee.query.get(2)
+        self.assertEqual(employee.role.name, test_role1_name)
+        self.assertEqual(employee.department.name, test_department1_name)
+
+    def test_reassign(self):
+        """
+        Test that an admin user can assign a new role and a new department
+        to an employee
+        """
+
+        # Create new department
+        department = Department(name=test_department2_name,
+                                description=test_department2_description)
+
+        # Create new role
+        role = Role(name=test_role2_name,
+                    description=test_role2_description)
+
+        # Add to database
+        db.session.add(department)
+        db.session.add(role)
+        db.session.commit()
+
+        # Login as admin user
+        self.login_admin_user()
+
+        # Click employees menu link
+        self.driver.find_element_by_id("employees_link").click()
+        time.sleep(1)
+
+        # Click on assign link
+        self.driver.find_element_by_class_name("fa-user-plus").click()
+        time.sleep(1)
+
+        # Select new department and role
+        select_dept = Select(self.driver.find_element_by_id("department"))
+        select_dept.select_by_visible_text(test_department2_name)
+        select_role = Select(self.driver.find_element_by_id("role"))
+        select_role.select_by_visible_text(test_role2_name)
+        self.driver.find_element_by_id("submit").click()
+        time.sleep(2)
+
+        # Assert success message is shown
+        success_message = self.driver.find_element_by_class_name("alert").text
+        assert "You have successfully assigned a department and role" in success_message
+
+        # Assert that employee's department and role has changed
+        employee = Employee.query.get(2)
+        self.assertEqual(employee.role.name, test_role2_name)
+        self.assertEqual(employee.department.name, test_department2_name)
 
 
 if __name__ == '__main__':
